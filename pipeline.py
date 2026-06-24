@@ -6,7 +6,7 @@ def run_research_pipeline(topic: str) -> dict:
     # search agent working
     print('\n'+'-'*20+"[bold green]Running Search Agent...[/bold green]"+'-'*20+'\n')
     search_agent = build_search_agent()
-    search_results = search_agent.invoke({
+    search_result = search_agent.invoke({
         "messages" : [("user", f"Find recent, reliable and detailed information about: {topic}")] 
     })
     state["search_results"] = search_result['messages'][-1].content
@@ -45,3 +45,7 @@ def run_research_pipeline(topic: str) -> dict:
     print("\n critic report \n", state['feedback'])
 
     return state
+
+if __name__ == "__main__":
+    topic = input("\n Enter a research topic : ")
+    run_research_pipeline(topic)
