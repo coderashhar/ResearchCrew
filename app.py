@@ -598,10 +598,9 @@ def build_pipeline_html(current_step: int = -1) -> str:
     nodes_html = ""
     for i, (icon, label) in enumerate(agents):
         state = get_node_state(i, current_step)
-        check = " ✓" if state == "done" else ""
         nodes_html += f"""
         <div class="pipeline-node">
-            <div class="node-icon {state}">{icon}{check}</div>
+            <div class="node-icon {state}">{icon}</div>
             <div class="node-label {state}">{label}</div>
         </div>
         """
