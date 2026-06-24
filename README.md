@@ -2,7 +2,7 @@
 
 # 🔬 ResearchCrew
 
-**Multi-agent research system powered by LangChain & Mistral AI. Four agents — Search, Scrape, Writer, Critic — collaborate via Tavily to deliver scored research reports.**
+**Multi-agent research system powered by LangChain & Mistral AI. Four agents — Search, Reader, Writer, Critic — collaborate via Tavily to deliver scored research reports.**
 
 
 </div>
@@ -25,7 +25,7 @@
 ## ✨ Features
 
 - 🔍 **Search Agent** — Discovers relevant, up-to-date sources using Tavily web search
-- 📖 **Scrape Agent** — Extracts clean text content from the most relevant URLs
+- 📖 **Reader Agent** — Extracts clean text content from the most relevant URLs
 - ✍️ **Writer Agent** — Synthesizes a structured research report with introduction, key findings, conclusion, and sources
 - 🧠 **Critic Agent** — Evaluates report quality with a score out of 10, strengths, and areas to improve
 - 🎨 **Modern Dark UI** — Glassmorphism cards, animated pipeline tracker, and real-time agent status
@@ -40,7 +40,7 @@ User Input (Topic)
        │
        ▼
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ Search Agent │────▶│ Scrape Agent │────▶│ Writer Agent │────▶│ Critic Agent │
+│ Search Agent │────▶│ Reader Agent │────▶│ Writer Agent │────▶│ Critic Agent │
 │   (Tavily)   │     │(BeautifulSoup)│     │  (LLM Chain) │     │  (LLM Chain) │
 └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
        │                    │                    │                     │

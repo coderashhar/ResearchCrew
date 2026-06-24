@@ -591,7 +591,7 @@ def build_pipeline_html(current_step: int = -1) -> str:
     """Build pipeline HTML string without rendering it."""
     agents = [
         ("🔍", "Search"),
-        ("📖", "Scrape"),
+        ("📖", "Reader"),
         ("✍️", "Writer"),
         ("🧠", "Critic"),
     ]
@@ -666,7 +666,7 @@ with st.sidebar:
 
     agents_info = [
         ("🔍", "Search Agent", "Web discovery", "#6366f1"),
-        ("📖", "Scrape Agent", "Content extraction", "#22d3ee"),
+        ("📖", "Reader Agent", "Content extraction", "#22d3ee"),
         ("✍️", "Writer Agent", "Report synthesis", "#8b5cf6"),
         ("🧠", "Critic Agent", "Quality evaluation", "#fb7185"),
     ]
@@ -776,7 +776,7 @@ if run_clicked and topic.strip():
     pipeline_placeholder.markdown(build_pipeline_html(1), unsafe_allow_html=True)
 
     with results_area:
-        with st.status("📖 **Scrape Agent** — Extracting content from top sources...", expanded=True) as status:
+        with st.status("📖 **Reader Agent** — Extracting content from top sources...", expanded=True) as status:
             reader_agent = build_reader_agent()
             reader_result = reader_agent.invoke({
                 "messages": [("user",
@@ -786,7 +786,7 @@ if run_clicked and topic.strip():
                 )]
             })
             state['scraped_content'] = reader_result['messages'][-1].content
-            status.update(label="✅ **Scrape Agent** — Content extracted!", state="complete")
+            status.update(label="✅ **Reader Agent** — Content extracted!", state="complete")
             st.markdown(f"```\n{state['scraped_content'][:600]}{'...' if len(state['scraped_content']) > 600 else ''}\n```")
 
     # STEP 2 — Writer Agent
