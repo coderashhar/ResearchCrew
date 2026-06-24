@@ -36,3 +36,12 @@ def run_research_pipeline(topic: str) -> dict:
         "research" : research_combined
     })
     print("\n Final Report\n",state['report'])
+
+    # critic chain working
+    print('\n'+'-'*20+"[bold green]Critic Agent is evaluating the report...[/bold green]"+'-'*20+'\n')
+    state["feedback"] = critic_chain.invoke({
+        "report":state['report']
+    })
+    print("\n critic report \n", state['feedback'])
+
+    return state
