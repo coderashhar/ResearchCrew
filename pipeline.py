@@ -24,3 +24,15 @@ def run_research_pipeline(topic: str) -> dict:
     })
     state['scraped_content'] = reader_result['messages'][-1].content
     print("\nscraped content: \n", state['scraped_content'])
+
+    # writer chain working
+    print('\n'+'-'*20+"[bold green]Writer Agent is drafting the research report...[/bold green]"+'-'*20+'\n')
+    research_combined = (
+        f"SEARCH RESULTS : \n {state['search_results']} \n\n"
+        f"DETAILED SCRAPED CONTENT : \n {state['scraped_content']}"
+    )
+    state["report"] = writer_chain.invoke({
+        "topic" : topic,
+        "research" : research_combined
+    })
+    print("\n Final Report\n",state['report'])
