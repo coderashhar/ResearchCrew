@@ -1,3 +1,5 @@
+import os
+import streamlit as st
 from langchain.agents import create_agent
 from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -6,6 +8,14 @@ from tools import web_search, scrape_url
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Fallback: load from Streamlit secrets if env vars are not set (Streamlit Cloud)
+for key in ("MISTRAL_API_KEY", "TAVILY_API_KEY"):
+    if not os.environ.get(key):
+        try:
+            os.environ[key] = st.secrets[key]
+        except (KeyError, FileNotFoundError):
+            pass
 
 # model setup
 llm = ChatMistralAI(model="mistral-medium-3-5", temperature=0)
