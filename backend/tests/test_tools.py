@@ -119,3 +119,99 @@ def test_missing_url_or_score_is_tolerated():
 
 def test_normalize_keeps_meaningful_query_params():
     assert tools.normalize_url("https://A.com/x/?id=3&utm_campaign=z#top") == "https://a.com/x?id=3"
+
+
+# --- read_sources ---------------------------------------------------------
+
+A, B, C = (result(f"https://{d}.com/p", s, title=d.upper()) for d, s in [("a", 0.9), ("b", 0.8), ("c", 0.7)])
+
+
+def extract_client(extracted, failed=()):
+    client = MagicMock()
+    client.extract.return_value = {
+        "results": [{"url": u, "raw_content": text} for u, text in extracted.items()],
+        "failed_results": [{"url": u, "error": "blocked"} for u in failed],
+    }
+    return client
+
+
+@pytest.fixture
+def scrape(monkeypatch):
+    """Replace the direct-HTTP fallback; URLs missing from .pages fail."""
+    calls = []
+    pages: dict[str, str] = {}
+
+    def fake(url):
+        calls.append(url)
+        if url not in pages:
+            raise requests.HTTPError("403")
+        return pages[url]
+
+    monkeypatch.setattr(tools, "_scrape_fallback", fake)
+    fake.calls, fake.pages = calls, pages
+    return fake
+
+
+def test_extract_success_numbers_from_start_id(scrape):
+    client = extract_client({A["url"]: "alpha", B["url"]: "beta"})
+    sources = tools.read_sources(client, [A, B], start_id=4)
+    client.extract.assert_called_once_with([A["url"], B["url"]], format="markdown")
+    assert [(s.id, s.title, s.domain, s.content) for s in sources] == [
+        (4, "A", "a.com", "alpha"),
+        (5, "B", "b.com", "beta"),
+    ]
+    assert scrape.calls == []
+
+
+def test_failed_url_uses_scrape_fallback(scrape):
+    scrape.pages[B["url"]] = "beta from html"
+    client = extract_client({A["url"]: "alpha"}, failed=[B["url"]])
+    sources = tools.read_sources(client, [A, B])
+    assert scrape.calls == [B["url"]]
+    assert [s.content for s in sources] == ["alpha", "beta from html"]
+
+
+def test_double_failure_skips_source_and_keeps_numbering_dense(scrape):
+    client = extract_client({A["url"]: "alpha", C["url"]: "gamma"}, failed=[B["url"]])
+    sources = tools.read_sources(client, [A, B, C])
+    assert [(s.id, s.url) for s in sources] == [(1, A["url"]), (2, C["url"])]
+
+
+def test_empty_extracted_content_falls_back(scrape):
+    scrape.pages[A["url"]] = "scraped"
+    sources = tools.read_sources(extract_client({A["url"]: ""}), [A])
+    assert [s.content for s in sources] == ["scraped"]
+
+
+def test_extract_outage_scrapes_everything(scrape, monkeypatch):
+    monkeypatch.setattr(tools._extract.retry, "wait", wait_none())
+    scrape.pages.update({A["url"]: "alpha", B["url"]: "beta"})
+    client = MagicMock()
+    client.extract.side_effect = TavilyTimeoutError(30)
+    sources = tools.read_sources(client, [A, B])
+    assert client.extract.call_count == 3
+    assert [s.content for s in sources] == ["alpha", "beta"]
+
+
+def test_content_truncated_to_4000_chars(scrape):
+    sources = tools.read_sources(extract_client({A["url"]: "x" * 10_000}), [A])
+    assert len(sources[0].content) == 4000
+
+
+def test_no_results_makes_no_calls():
+    client = MagicMock()
+    assert tools.read_sources(client, []) == []
+    client.extract.assert_not_called()
+
+
+def test_scrape_fallback_strips_page_chrome(monkeypatch):
+    resp = MagicMock(text="<html><nav>menu</nav><script>x()</script><p>Body text</p></html>")
+    monkeypatch.setattr(tools.requests, "get", lambda *a, **kw: resp)
+    assert tools._scrape_fallback("https://a.com") == "Body text"
+
+
+def test_scrape_fallback_rejects_empty_page(monkeypatch):
+    resp = MagicMock(text="<html><script>only()</script></html>")
+    monkeypatch.setattr(tools.requests, "get", lambda *a, **kw: resp)
+    with pytest.raises(ValueError):
+        tools._scrape_fallback("https://a.com")
