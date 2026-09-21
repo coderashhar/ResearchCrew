@@ -5,6 +5,9 @@ is decided by the planner, and which pages to read is a ranking problem,
 so neither needs a model in the loop.
 """
 
+from collections.abc import Iterable
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
 import requests
 from tavily import TavilyClient
 from tavily.errors import TimeoutError as TavilyTimeoutError
@@ -47,3 +50,44 @@ def search(client: TavilyClient, q: SearchQuery, max_results: int = 6) -> list[d
     if q.days is not None:
         params["days"] = q.days
     return client.search(**params).get("results", [])
+
+
+def normalize_url(url: str) -> str:
+    """Canonical form for duplicate detection: no fragment, no utm_* tracking."""
+    parts = urlsplit(url.strip())
+    query = urlencode(
+        [(k, v) for k, v in parse_qsl(parts.query) if not k.lower().startswith("utm_")]
+    )
+    path = parts.path.rstrip("/") or "/"
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), path, query, ""))
+
+
+def domain_of(url: str) -> str:
+    host = urlsplit(url).netloc.lower().split(":")[0]
+    return host.removeprefix("www.")
+
+
+def select_sources(
+    results: Iterable[dict], existing_urls: Iterable[str] = (), n: int = 6
+) -> list[dict]:
+    """Pick the ``n`` highest-scoring results, at most one per domain.
+
+    One page per domain keeps a single site from dominating the report.
+    URLs already read in an earlier round are skipped.
+    """
+    seen_urls = {normalize_url(u) for u in existing_urls}
+    seen_domains: set[str] = set()
+    picked: list[dict] = []
+    for r in sorted(results, key=lambda r: r.get("score") or 0.0, reverse=True):
+        url = r.get("url")
+        if not url:
+            continue
+        norm, domain = normalize_url(url), domain_of(url)
+        if norm in seen_urls or domain in seen_domains:
+            continue
+        seen_urls.add(norm)
+        seen_domains.add(domain)
+        picked.append(r)
+        if len(picked) == n:
+            break
+    return picked

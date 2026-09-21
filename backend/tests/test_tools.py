@@ -72,3 +72,50 @@ def test_does_not_retry_permanent_errors(permanent):
     with pytest.raises(type(permanent)):
         tools.search(client, SearchQuery(query="q", topic="general"))
     assert client.search.call_count == 1
+
+
+# --- select_sources -------------------------------------------------------
+
+
+def result(url, score, title="t"):
+    return {"url": url, "title": title, "content": "c", "score": score}
+
+
+def test_same_domain_keeps_higher_score():
+    picked = tools.select_sources(
+        [result("https://a.com/low", 0.2), result("https://www.a.com/high", 0.9)]
+    )
+    assert [r["url"] for r in picked] == ["https://www.a.com/high"]
+
+
+def test_tracking_params_and_fragments_collapse():
+    picked = tools.select_sources(
+        [
+            result("https://a.com/post?utm_source=x", 0.9),
+            result("https://a.com/post#section", 0.8),
+        ]
+    )
+    assert len(picked) == 1
+
+
+def test_existing_urls_excluded():
+    picked = tools.select_sources(
+        [result("https://a.com/p", 0.9), result("https://b.com/p", 0.5)],
+        existing_urls=["https://a.com/p/?utm_medium=y"],
+    )
+    assert [r["url"] for r in picked] == ["https://b.com/p"]
+
+
+def test_ranked_by_score_and_capped_at_n():
+    results = [result(f"https://s{i}.com", i / 10) for i in range(10)]
+    picked = tools.select_sources(results, n=3)
+    assert [r["url"] for r in picked] == ["https://s9.com", "https://s8.com", "https://s7.com"]
+
+
+def test_missing_url_or_score_is_tolerated():
+    picked = tools.select_sources([{"title": "no url"}, {"url": "https://a.com"}])
+    assert [r["url"] for r in picked] == ["https://a.com"]
+
+
+def test_normalize_keeps_meaningful_query_params():
+    assert tools.normalize_url("https://A.com/x/?id=3&utm_campaign=z#top") == "https://a.com/x?id=3"
