@@ -31,6 +31,7 @@ class Settings:
     database_url: str | None = None
     writer_model: str = "mistral-medium-3-5"
     critic_model: str = "mistral-large-latest"
+    client_hash_salt: str = ""
     pass_score: int = 7
     max_revisions: int = 2
     time_budget_s: int = 220
@@ -67,6 +68,7 @@ def get_settings(env: Mapping[str, str] | None = None) -> Settings:
         database_url=env.get("DATABASE_URL") or None,
         writer_model=env.get("WRITER_MODEL") or defaults.writer_model,
         critic_model=env.get("CRITIC_MODEL") or defaults.critic_model,
+        client_hash_salt=env.get("CLIENT_HASH_SALT") or defaults.client_hash_salt,
         pass_score=_int(env, "PASS_SCORE", defaults.pass_score),
         max_revisions=_int(env, "MAX_REVISIONS", defaults.max_revisions),
         time_budget_s=_int(env, "TIME_BUDGET_S", defaults.time_budget_s),
