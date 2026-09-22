@@ -37,11 +37,13 @@ def test_env_overrides_defaults():
             "TIME_BUDGET_S": "120",
             "WRITER_MODEL": "w",
             "CRITIC_MODEL": "c",
+            "CLIENT_HASH_SALT": "pepper",
             "DATABASE_URL": "postgresql://x",
         }
     )
     assert (s.pass_score, s.max_revisions, s.time_budget_s) == (9, 1, 120)
     assert (s.writer_model, s.critic_model) == ("w", "c")
+    assert s.client_hash_salt == "pepper"
     assert s.database_url == "postgresql://x"
 
 
