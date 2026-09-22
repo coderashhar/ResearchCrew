@@ -27,21 +27,40 @@ def _clean_env(monkeypatch):
         monkeypatch.delenv(name, raising=False)
 
 
+LOOPBACK = {"127.0.0.1", "::1", "localhost", ""}
+
+
 @pytest.fixture(autouse=True)
 def _block_network(request, monkeypatch):
-    """Fail fast on any real socket unless the test is marked integration.
+    """Fail fast on any outbound connection unless the test is integration.
 
-    Unit tests must mock Tavily, Mistral and Postgres. A test that silently
-    reaches the network is slow, flaky and spends real API credit.
+    Unit tests must mock Tavily, Mistral and Postgres: a test that
+    silently reaches the network is slow, flaky and spends API credit.
+    Loopback stays open, since TestClient and asyncio use it internally.
     """
     if request.node.get_closest_marker("integration"):
         return
 
-    def guard(*args, **kwargs):
-        raise NetworkBlockedError(
-            f"Network access in unit test {request.node.nodeid}; "
-            "mock the client or mark the test @pytest.mark.integration"
-        )
+    real_connect = socket.socket.connect
+    real_create = socket.create_connection
 
-    monkeypatch.setattr(socket, "socket", guard)
-    monkeypatch.setattr(socket, "create_connection", guard)
+    def host_of(address):
+        return address[0] if isinstance(address, tuple) else str(address)
+
+    def guard(address):
+        if host_of(address) not in LOOPBACK:
+            raise NetworkBlockedError(
+                f"Network access in unit test {request.node.nodeid}; "
+                "mock the client or mark the test @pytest.mark.integration"
+            )
+
+    def connect(self, address):
+        guard(address)
+        return real_connect(self, address)
+
+    def create_connection(address, *args, **kwargs):
+        guard(address)
+        return real_create(address, *args, **kwargs)
+
+    monkeypatch.setattr(socket.socket, "connect", connect)
+    monkeypatch.setattr(socket, "create_connection", create_connection)
