@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { ResultView, markdownFilename } from "./ResultView";
@@ -46,9 +46,11 @@ describe("ResultView", () => {
     expect(screen.getByTestId("score-v2")).toHaveTextContent("v2 · 8/10");
   });
 
-  it("scales each rubric bar to its score", () => {
+  it("scales each rubric bar to its score once it has grown", async () => {
     render(<ResultView state={state} />);
-    expect(screen.getAllByTestId("bar-accuracy")[0]).toHaveStyle({ transform: "scaleX(0.6)" });
+    await waitFor(() =>
+      expect(screen.getAllByTestId("bar-accuracy")[0]).toHaveStyle({ transform: "scaleX(0.6)" }),
+    );
     expect(screen.getAllByTestId("bar-citation_quality")[0]).toHaveStyle({
       transform: "scaleX(0.9)",
     });
