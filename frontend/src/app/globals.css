@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  /* Surfaces and text, carried over from the Streamlit theme. */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: rgba(18, 18, 30, 0.6);
+  --border-glass: rgba(255, 255, 255, 0.06);
+  --text-primary: #e8e8f0;
+  --text-secondary: #8b8ba3;
+  --text-muted: #5a5a72;
+
+  --accent-indigo: #6366f1;
+  --accent-violet: #8b5cf6;
+  --accent-cyan: #22d3ee;
+  --accent-emerald: #34d399;
+  --accent-amber: #fbbf24;
+  --accent-rose: #fb7185;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+  /* Motion. Built-in easings are too weak to read as intentional, and
+     UI movement stays under 300ms so it never feels like waiting. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 140ms;
+  --dur-ui: 200ms;
+  --dur-enter: 260ms;
+}
+
+@theme inline {
+  --color-bg: var(--bg-primary);
+  --color-surface: var(--bg-secondary);
+  --color-fg: var(--text-primary);
+  --color-muted: var(--text-secondary);
+  --color-faint: var(--text-muted);
+  --color-indigo: var(--accent-indigo);
+  --color-violet: var(--accent-violet);
+  --color-cyan: var(--accent-cyan);
+  --color-emerald: var(--accent-emerald);
+  --color-amber: var(--accent-amber);
+  --color-rose: var(--accent-rose);
+  --color-glass: var(--border-glass);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+}
+
+/* Press feedback: the interface confirms it heard the click. */
+.pressable {
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    opacity var(--dur-ui) var(--ease-out);
+}
+
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pressable:hover:not(:disabled) {
+    opacity: 0.92;
+  }
+}
+
+.enter {
+  animation: enter var(--dur-enter) var(--ease-out) both;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Gentler, not gone: fades still explain what changed. */
+  .pressable:active:not(:disabled) {
+    transform: none;
+  }
+
+  .enter {
+    animation: fade 150ms ease both;
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
