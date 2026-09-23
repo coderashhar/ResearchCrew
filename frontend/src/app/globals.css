@@ -185,9 +185,12 @@ body {
 
 /* ── Citation popover ───────────────────────────────────────────────── */
 
-/* Scales out of the chip that opened it, not the middle of the card. */
+/* Scales out of the chip that opened it, not the middle of the card.
+   Opaque, because it sits on top of the sentence it explains. */
 .citation-popover {
   transform-origin: var(--radix-popover-content-transform-origin);
+  background: #14141f;
+  backdrop-filter: none;
 }
 
 .citation-popover[data-state="open"] {

@@ -54,11 +54,16 @@ test("a citation popover opens from the chip that was clicked", async ({ page })
   const popover = page.locator(".citation-popover");
   await expect(popover).toBeVisible();
 
-  const origin = await popover.evaluate((el) => getComputedStyle(el).transformOrigin);
-  // Radix resolves the origin to the trigger; the default would be the centre.
-  expect(origin).not.toBe("");
+  const { origin, fromTrigger, box } = await popover.evaluate((el) => ({
+    origin: getComputedStyle(el).transformOrigin,
+    fromTrigger: getComputedStyle(el).getPropertyValue(
+      "--radix-popover-content-transform-origin",
+    ),
+    box: { width: el.clientWidth, height: el.clientHeight },
+  }));
+
+  // Radix resolves the origin to the trigger; the default is the centre.
+  expect(fromTrigger.trim()).not.toBe("");
   const [x, y] = origin.split(" ").map(parseFloat);
-  const size = await popover.boundingBox();
-  expect(x).not.toBeCloseTo(size!.width / 2, 0);
-  expect(y).toBeGreaterThanOrEqual(0);
+  expect([x, y]).not.toEqual([box.width / 2, box.height / 2]);
 });
