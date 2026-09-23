@@ -2,6 +2,7 @@
 
 import { LiveLog } from "@/components/LiveLog";
 import { PipelineTracker } from "@/components/PipelineTracker";
+import { ResultView } from "@/components/ResultView";
 import { TopicForm } from "@/components/TopicForm";
 import { useResearchRun } from "@/hooks/useResearchRun";
 import type { SavedRun } from "@/lib/types";
@@ -22,8 +23,16 @@ export function RunView({ saved }: { saved?: SavedRun }) {
 
       {state.topic && (
         <section className="space-y-4">
+          <h2 className="text-lg text-muted">{state.topic}</h2>
           <PipelineTracker step={state.step} revision={state.revision} />
-          <LiveLog state={state} />
+          {/* Kept after the run: it is the record of what was searched and
+              read, not just a progress indicator. */}
+          <details open={state.step !== "done"}>
+            <summary className="cursor-pointer text-sm text-faint">Run log</summary>
+            <div className="mt-2">
+              <LiveLog state={state} />
+            </div>
+          </details>
         </section>
       )}
 
@@ -33,9 +42,7 @@ export function RunView({ saved }: { saved?: SavedRun }) {
         </p>
       )}
 
-      {state.report && (
-        <article className="card whitespace-pre-wrap p-6 leading-relaxed">{state.report}</article>
-      )}
+      <ResultView state={state} />
     </main>
   );
 }
