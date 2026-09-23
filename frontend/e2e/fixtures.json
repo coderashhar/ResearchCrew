@@ -1,0 +1,30 @@
+{
+  "runId": "11111111-2222-3333-4444-555555555555",
+  "topic": "mRNA vaccines",
+  "report": "A stronger claim [1] and another [2].",
+  "queries": [{ "query": "how mRNA works", "topic": "general", "days": null }],
+  "sources": [
+    { "id": 1, "title": "First paper", "domain": "nature.com", "url": "https://nature.com/a" },
+    { "id": 2, "title": "Second paper", "domain": "who.int", "url": "https://who.int/b" }
+  ],
+  "drafts": [
+    {
+      "version": 1,
+      "report": "Thin claim [1].",
+      "critique": {
+        "accuracy": 5, "coverage": 5, "citation_quality": 5, "clarity": 5, "recency": 5,
+        "overall": 5, "strengths": [], "gaps": ["No dates on the trial results"],
+        "unsupported_claims": [], "needs_more_research": false, "followup_queries": []
+      }
+    },
+    {
+      "version": 2,
+      "report": "A stronger claim [1] and another [2].",
+      "critique": {
+        "accuracy": 8, "coverage": 8, "citation_quality": 8, "clarity": 8, "recency": 8,
+        "overall": 8, "strengths": [], "gaps": [],
+        "unsupported_claims": [], "needs_more_research": false, "followup_queries": []
+      }
+    }
+  ]
+}
